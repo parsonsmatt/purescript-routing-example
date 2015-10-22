@@ -2,7 +2,7 @@ module Router where
 
 import BigPrelude
 
-import Data.Functor.Coproduct (Coproduct(..))
+import Data.Functor.Coproduct (Coproduct(..), left)
 import Control.Monad.Aff (Aff(), forkAff)
 import qualified Control.Monad.Aff as AF
 import Control.Monad.Eff.Exception
@@ -118,10 +118,10 @@ redirects :: forall eff. Driver QueryP eff
           -> Routes
           -> Aff (Effects eff) Unit
 redirects driver _ =
-  driver <<< Coproduct <<< Left <<< action <<< Goto
+  driver <<< left <<< action <<< Goto
 -- redirects driver _ Home = 
---   driver (Coproduct (Left (action (Goto Home))))
+--   driver (left (action (Goto Home))))
 -- redirects driver _ Profile =
---   driver (Coproduct (Left (action (Goto Profile))))
+--   driver (left (action (Goto Profile))))
 -- redirects driver _ (Sessions view) =
---   driver (Coproduct (Left (action (Goto (Sessions view)))))
+--   driver (left (action (Goto (Sessions view)))))
