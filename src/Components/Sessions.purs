@@ -21,7 +21,7 @@ instance eqSlot :: Eq Slot where
 instance ordGeneric :: Ord Slot where
   compare = gCompare
 ui :: forall g. (Functor g) => Component State Input g
-ui = component render eval
+ui = component { render, eval }
   where
     render _ =
       H.div_
@@ -29,5 +29,5 @@ ui = component render eval
         , H.p_ [ H.text "wow you lift a LOT" ]
         ]
 
-    eval :: Eval _ _ _ g
+    eval :: Natural Input (ComponentDSL State Input g)
     eval (Noop n) = pure n

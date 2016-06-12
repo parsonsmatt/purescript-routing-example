@@ -25,7 +25,7 @@ import Routing.Match.Class
 import qualified Component.Profile as Profile
 import qualified Component.Sessions as Sessions
 
-data Input a 
+data Input a
   = Goto Routes a
 
 data CRUD
@@ -52,7 +52,7 @@ routing = profile
     parseCRUD = Show <$> num <|> pure Index
 
 type State =
-  { currentPage :: String 
+  { currentPage :: String
   }
 
 type ChildState = Either Profile.State Sessions.State
@@ -66,15 +66,16 @@ pathToSessions :: ChildPath Sessions.State ChildState Sessions.Input ChildQuery 
 pathToSessions = cpR
 
 type StateP g
-  = InstalledState State ChildState Input ChildQuery g ChildSlot
+  = ParentState State ChildState Input ChildQuery g ChildSlot
 
 type QueryP
   = Coproduct Input (ChildF ChildSlot ChildQuery)
 
-ui :: forall g. (Plus g) 
+ui :: forall g. (Plus g)
    => Component (StateP g) QueryP g
-ui = parentComponent render eval
+ui = parentComponent { render, eval, peek: Nothing }
   where
+    render :: State -> ParentHTML ChildState Input ChildQuery g ChildSlot
     render st =
       H.div_
         [ H.h1_ [ H.text (st.currentPage) ]
@@ -92,7 +93,7 @@ ui = parentComponent render eval
     viewPage _ =
       H.div_ []
 
-    eval :: EvalParent Input State ChildState Input ChildQuery g ChildSlot
+    eval :: Natural Input (ParentDSL State ChildState Input ChildQuery g ChildSlot)
     eval (Goto Profile next) = do
       modify (_ { currentPage = "Profile" })
       pure next
@@ -119,7 +120,7 @@ redirects :: forall eff. Driver QueryP eff
           -> Aff (Effects eff) Unit
 redirects driver _ =
   driver <<< left <<< action <<< Goto
--- redirects driver _ Home = 
+-- redirects driver _ Home =
 --   driver (left (action (Goto Home))))
 -- redirects driver _ Profile =
 --   driver (left (action (Goto Profile))))
