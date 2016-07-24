@@ -4,7 +4,7 @@ import Prelude
 import Data.Generic
 
 import Halogen
-import qualified Halogen.HTML.Indexed as H
+import Halogen.HTML.Indexed as H
 
 data Input a
   = Noop a
@@ -29,5 +29,5 @@ ui = component { render, eval }
         , H.p_ [ H.text "wow you lift a LOT" ]
         ]
 
-    eval :: Natural Input (ComponentDSL State Input g)
+    eval :: Input ~> ComponentDSL State Input g
     eval (Noop n) = pure n

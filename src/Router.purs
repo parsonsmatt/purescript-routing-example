@@ -4,7 +4,7 @@ import BigPrelude
 
 import Data.Functor.Coproduct (Coproduct(..), left)
 import Control.Monad.Aff (Aff(), forkAff)
-import qualified Control.Monad.Aff as AF
+import Control.Monad.Aff as AF
 import Control.Monad.Eff.Exception
 import Control.Monad.Aff.AVar
 import DOM
@@ -13,17 +13,17 @@ import Control.Monad.Free (liftFI)
 import Data.String (toLower)
 
 import Halogen
-import qualified Halogen.HTML.Indexed as H
-import qualified Halogen.HTML.Events.Indexed as E
-import qualified Halogen.HTML.Properties.Indexed as P
+import Halogen.HTML.Indexed as H
+import Halogen.HTML.Events.Indexed as E
+import Halogen.HTML.Properties.Indexed as P
 import Halogen.Component.ChildPath (ChildPath(), cpR, cpL)
 
 import Routing
 import Routing.Match
 import Routing.Match.Class
 
-import qualified Component.Profile as Profile
-import qualified Component.Sessions as Sessions
+import Component.Profile as Profile
+import Component.Sessions as Sessions
 
 data Input a
   = Goto Routes a
@@ -83,7 +83,7 @@ ui = parentComponent { render, eval, peek: Nothing }
         , viewPage st.currentPage
         ]
 
-    link s = H.li_ [ H.a [ P.href ("#/" ++ toLower s) ] [ H.text s ] ]
+    link s = H.li_ [ H.a [ P.href ("#/" <> toLower s) ] [ H.text s ] ]
 
     viewPage :: String -> HTML (SlotConstructor ChildState ChildQuery g ChildSlot) Input
     viewPage "Sessions" =
@@ -93,14 +93,14 @@ ui = parentComponent { render, eval, peek: Nothing }
     viewPage _ =
       H.div_ []
 
-    eval :: Natural Input (ParentDSL State ChildState Input ChildQuery g ChildSlot)
+    eval :: Input ~> ParentDSL State ChildState Input ChildQuery g ChildSlot
     eval (Goto Profile next) = do
       modify (_ { currentPage = "Profile" })
       pure next
     eval (Goto (Sessions view) next) = do
       modify case view of
                   Index -> (_ { currentPage = "Sessions" })
-                  Show n -> (_ { currentPage = "Session " ++ show n })
+                  Show n -> (_ { currentPage = "Session " <> show n })
       pure next
     eval (Goto Home next) = do
       modify (_ { currentPage = "Home" })
