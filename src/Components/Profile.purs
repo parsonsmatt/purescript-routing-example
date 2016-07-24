@@ -1,10 +1,9 @@
 module Component.Profile where
 
 import Prelude
-import Data.Generic
 
 import Halogen
-import qualified Halogen.HTML.Indexed as H
+import Halogen.HTML.Indexed as H
 
 data Input a
   = Noop a
@@ -12,14 +11,8 @@ data Input a
 type State = Unit
 
 data Slot = Slot
-
-derive instance slotGeneric :: Generic Slot
-
-instance eqSlot :: Eq Slot where
-  eq = gEq
-
-instance ordGeneric :: Ord Slot where
-  compare = gCompare
+derive instance eqSlot :: Eq Slot
+derive instance ordSlot :: Ord Slot
 
 ui :: forall g. (Functor g) => Component State Input g
 ui = component { render, eval }
@@ -30,5 +23,5 @@ ui = component { render, eval }
         , H.p_ [ H.text "what a nice profile!" ]
         ]
 
-    eval :: Natural Input (ComponentDSL State Input g)
+    eval :: Input ~> ComponentDSL State Input g
     eval (Noop n) = pure n

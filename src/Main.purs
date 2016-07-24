@@ -8,10 +8,10 @@ import Halogen
 import Halogen.Util
 import Control.Monad.Eff.Exception (throwException)
 
-import qualified Router as R
+import Router as R
 
 main :: forall eff. Eff (R.Effects eff) Unit
-main = runAff throwException (const (pure unit)) $ do
+main = void $ runAff throwException (const (pure unit)) $ do
   body <- awaitBody
   driver <- runUI R.ui (parentState R.init) body
   forkAff $ R.routeSignal driver

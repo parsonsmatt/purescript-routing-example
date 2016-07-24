@@ -22,8 +22,8 @@ import Data.Functor
 import Data.Tuple
 import Data.Maybe
 import Data.Either
-import qualified Data.Array as A
-import qualified Data.List as L
+import Data.Array as A
+import Data.List as L
 import Data.List (List())
 import Control.Monad.Eff
 import Control.Monad.Eff.Class
