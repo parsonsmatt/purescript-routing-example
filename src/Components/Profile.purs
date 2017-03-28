@@ -1,9 +1,9 @@
 module Component.Profile where
 
-import Prelude
-
-import Halogen
-import Halogen.HTML.Indexed as H
+import Data.Maybe (Maybe(..))
+import Halogen as H
+import Halogen.HTML as HH
+import Prelude (class Eq, class Ord, type (~>), Unit, Void, const, pure, unit)
 
 data Input a
   = Noop a
@@ -11,17 +11,23 @@ data Input a
 type State = Unit
 
 data Slot = Slot
+
 derive instance eqSlot :: Eq Slot
 derive instance ordSlot :: Ord Slot
 
-ui :: forall g. (Functor g) => Component State Input g
-ui = component { render, eval }
+ui :: forall m. H.Component HH.HTML Input Unit Void m
+ui = H.component
+  { initialState: const unit
+  , render
+  , eval
+  , receiver: const Nothing
+  }
   where
     render _ =
-      H.div_
-        [ H.h1_ [ H.text "Your Profile" ]
-        , H.p_ [ H.text "what a nice profile!" ]
+      HH.div_
+        [ HH.h1_ [ HH.text "Your Profile" ]
+        , HH.p_ [ HH.text "what a nice profile!" ]
         ]
 
-    eval :: Input ~> ComponentDSL State Input g
+    eval :: Input ~> H.ComponentDSL State Input Void m
     eval (Noop n) = pure n

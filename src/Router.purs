@@ -1,29 +1,20 @@
 module Router where
 
 import BigPrelude
-
-import Data.Functor.Coproduct (Coproduct(..), left)
-import Control.Monad.Aff (Aff(), forkAff)
-import Control.Monad.Aff as AF
-import Control.Monad.Eff.Exception
-import Control.Monad.Aff.AVar
-import DOM
-import Control.Monad.Free (liftFI)
-
-import Data.String (toLower)
-
-import Halogen
-import Halogen.HTML.Indexed as H
-import Halogen.HTML.Events.Indexed as E
-import Halogen.HTML.Properties.Indexed as P
-import Halogen.Component.ChildPath (ChildPath(), cpR, cpL)
-
-import Routing
-import Routing.Match
-import Routing.Match.Class
-
+import Routing (matchesAff)
+import Routing.Match (Match)
+import Routing.Match.Class (lit, num)
 import Component.Profile as Profile
 import Component.Sessions as Sessions
+import Halogen as H
+import Halogen.Aff as HA
+import Halogen.HTML as HH
+import Halogen.HTML.Properties as HP
+import Control.Monad.Aff (Aff)
+import Control.Monad.State.Class (modify)
+import Data.Functor.Coproduct (Coproduct)
+import Data.String (toLower)
+import Halogen.Component.ChildPath (ChildPath, cpR, cpL)
 
 data Input a
   = Goto Routes a
@@ -55,45 +46,45 @@ type State =
   { currentPage :: String
   }
 
-type ChildState = Either Profile.State Sessions.State
 type ChildQuery = Coproduct Profile.Input Sessions.Input
 type ChildSlot = Either Profile.Slot Sessions.Slot
 
-pathToProfile :: ChildPath Profile.State ChildState Profile.Input ChildQuery Profile.Slot ChildSlot
+pathToProfile :: ChildPath Profile.Input ChildQuery Profile.Slot ChildSlot
 pathToProfile = cpL
 
-pathToSessions :: ChildPath Sessions.State ChildState Sessions.Input ChildQuery Sessions.Slot ChildSlot
+pathToSessions :: ChildPath Sessions.Input ChildQuery Sessions.Slot ChildSlot
 pathToSessions = cpR
 
-type StateP g
-  = ParentState State ChildState Input ChildQuery g ChildSlot
-
 type QueryP
-  = Coproduct Input (ChildF ChildSlot ChildQuery)
+  = Coproduct Input ChildQuery
 
-ui :: forall g. (Plus g)
-   => Component (StateP g) QueryP g
-ui = parentComponent { render, eval, peek: Nothing }
+ui :: forall m. H.Component HH.HTML Input Unit Void m
+ui = H.parentComponent
+  { initialState: const init
+  , render
+  , eval
+  , receiver: const Nothing
+  }
   where
-    render :: State -> ParentHTML ChildState Input ChildQuery g ChildSlot
+    render :: State -> H.ParentHTML Input ChildQuery ChildSlot m
     render st =
-      H.div_
-        [ H.h1_ [ H.text (st.currentPage) ]
-        , H.ul_ (map link ["Sessions", "Profile", "Home"])
+      HH.div_
+        [ HH.h1_ [ HH.text (st.currentPage) ]
+        , HH.ul_ (map link ["Sessions", "Profile", "Home"])
         , viewPage st.currentPage
         ]
 
-    link s = H.li_ [ H.a [ P.href ("#/" <> toLower s) ] [ H.text s ] ]
+    link s = HH.li_ [ HH.a [ HP.href ("#/" <> toLower s) ] [ HH.text s ] ]
 
-    viewPage :: String -> HTML (SlotConstructor ChildState ChildQuery g ChildSlot) Input
+    viewPage :: String -> H.ParentHTML Input ChildQuery ChildSlot m
     viewPage "Sessions" =
-      H.slot' pathToSessions Sessions.Slot \_ -> { component: Sessions.ui, initialState: unit }
+      HH.slot' pathToSessions Sessions.Slot Sessions.ui unit absurd
     viewPage "Profile" =
-      H.slot' pathToProfile Profile.Slot \_ -> { component: Profile.ui, initialState: unit }
+      HH.slot' pathToProfile Profile.Slot Profile.ui unit absurd
     viewPage _ =
-      H.div_ []
+      HH.div_ []
 
-    eval :: Input ~> ParentDSL State ChildState Input ChildQuery g ChildSlot
+    eval :: Input ~> H.ParentDSL State Input ChildQuery ChildSlot Void m
     eval (Goto Profile next) = do
       modify (_ { currentPage = "Profile" })
       pure next
@@ -106,20 +97,18 @@ ui = parentComponent { render, eval, peek: Nothing }
       modify (_ { currentPage = "Home" })
       pure next
 
-type Effects e = (dom :: DOM, avar :: AVAR, err :: EXCEPTION | e)
-
-routeSignal :: forall eff. Driver QueryP eff
-            -> Aff (Effects eff) Unit
+routeSignal :: forall eff. H.HalogenIO Input Void (Aff (HA.HalogenEffects eff))
+            -> Aff (HA.HalogenEffects eff) Unit
 routeSignal driver = do
   Tuple old new <- matchesAff routing
   redirects driver old new
 
-redirects :: forall eff. Driver QueryP eff
+redirects :: forall eff. H.HalogenIO Input Void (Aff (HA.HalogenEffects eff))
           -> Maybe Routes
           -> Routes
-          -> Aff (Effects eff) Unit
+          -> Aff (HA.HalogenEffects eff) Unit
 redirects driver _ =
-  driver <<< left <<< action <<< Goto
+  driver.query <<< H.action <<< Goto
 -- redirects driver _ Home =
 --   driver (left (action (Goto Home))))
 -- redirects driver _ Profile =
