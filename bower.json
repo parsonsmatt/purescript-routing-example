@@ -11,11 +11,11 @@
     "output"
   ],
   "dependencies": {
-    "purescript-console": "^2.0.0",
-    "purescript-halogen": "^1.2.1",
-    "purescript-routing": "^4.0.0"
+    "purescript-console": "^3.0.0",
+    "purescript-halogen": "^2.1.0",
+    "purescript-routing": "^5.1.0"
   },
   "devDependencies": {
-    "purescript-psci-support": "^2.0.0"
+    "purescript-psci-support": "^3.0.0"
   }
 }
