@@ -84,32 +84,21 @@ ui = H.parentComponent
 
     eval :: Input ~> H.ParentDSL State Input ChildQuery ChildSlot Void m
     eval (Goto Profile next) = do
-      modify (_ { currentPage = "Profile" })
+      H.modify_ (_ { currentPage = "Profile" })
       pure next
     eval (Goto (Sessions view) next) = do
-      modify case view of
+      H.modify_ case view of
                   Index -> (_ { currentPage = "Sessions" })
                   Show n -> (_ { currentPage = "Session " <> show n })
       pure next
     eval (Goto Home next) = do
-      modify (_ { currentPage = "Home" })
+      H.modify_ (_ { currentPage = "Home" })
       pure next
 
-routeSignal :: forall eff. H.HalogenIO Input Void (Aff (HA.HalogenEffects eff))
-            -> Aff (HA.HalogenEffects eff) Unit
-routeSignal driver = do
-  Tuple old new <- matchesAff routing
-  redirects driver old new
-
-redirects :: forall eff. H.HalogenIO Input Void (Aff (HA.HalogenEffects eff))
-          -> Maybe Routes
-          -> Routes
-          -> Aff (HA.HalogenEffects eff) Unit
-redirects driver _ =
-  driver.query <<< H.action <<< Goto
--- redirects driver _ Home =
---   driver (left (action (Goto Home))))
--- redirects driver _ Profile =
---   driver (left (action (Goto Profile))))
--- redirects driver _ (Sessions view) =
---   driver (left (action (Goto (Sessions view)))))
+routeSignal :: H.HalogenIO Input Void Aff -> Aff (Effect Unit)
+routeSignal driver = liftEffect do
+  matches routing hashChanged
+  where
+    hashChanged _ newRoute = do
+      _ <- launchAff $ driver.query <<< H.action <<< Goto $ newRoute
+      pure unit
