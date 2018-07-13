@@ -1,17 +1,15 @@
 module Router where
 
 import BigPrelude
-import Routing (matchesAff)
-import Routing.Match (Match)
-import Routing.Match.Class (lit, num)
+import Routing.Hash (matches)
+import Routing.Match (Match, lit, num)
 import Component.Profile as Profile
 import Component.Sessions as Sessions
 import Halogen as H
-import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Control.Monad.Aff (Aff)
-import Control.Monad.State.Class (modify)
+import Effect (Effect)
+import Effect.Aff (Aff, launchAff)
 import Data.Functor.Coproduct (Coproduct)
 import Data.String (toLower)
 import Halogen.Component.ChildPath (ChildPath, cpR, cpL)
