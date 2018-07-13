@@ -2,12 +2,12 @@ module BigPrelude
   ( module Prelude
   , module Data.Maybe
   , module Data.Either
-  , module Control.Monad.Eff
+  , module Effect
+  , module Effect.Class
   , module Data.Functor
   , module Control.Alt
   , module Data.Tuple
   , module Control.Apply
-  , module Control.Monad.Eff.Class
   , module Control.Plus
   , eitherToMaybe
   , eitherToList
@@ -25,8 +25,8 @@ import Data.Either
 import Data.Array as A
 import Data.List as L
 import Data.List (List())
-import Control.Monad.Eff
-import Control.Monad.Eff.Class
+import Effect
+import Effect.Class
 
 eitherToMaybe :: forall a b. Either b a -> Maybe a
 eitherToMaybe (Left _) =
